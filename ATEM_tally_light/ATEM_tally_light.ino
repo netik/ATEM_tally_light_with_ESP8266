@@ -26,15 +26,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <TallyServer.h>
 
 //Define LED1 color pins
-#define PIN_RED1    D0
-#define PIN_GREEN1  D2
-#define PIN_BLUE1   D1
+#define PIN_RED1    16
+#define PIN_GREEN1  4
+#define PIN_BLUE1   5
 
+#ifdef TWO_LED
 //Define LED2 color pins
 #define PIN_RED2    D4
 #define PIN_GREEN2  D5
 #define PIN_BLUE2   D6
-
+#endif TWO_LED
 
 //Define LED colors
 #define LED_OFF     0
@@ -55,6 +56,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define MODE_NORMAL                     1
 #define MODE_PREVIEW_STAY_ON            2
 #define MODE_PROGRAM_ONLY               3
+
+#undef TWO_LED
 
 //Initialize global variables
 ESP8266WebServer server(80);
@@ -77,6 +80,29 @@ struct Settings {
     IPAddress switcherIP;
 };
 
+void ledTest() {
+    // cycle through LEDs to confirm function
+    Serial.println("LED Test\n");
+    digitalWrite(PIN_RED1, 0);
+    digitalWrite(PIN_GREEN1, 0);
+    digitalWrite(PIN_BLUE1, 0);
+    Serial.println("Lred\n");
+    digitalWrite(PIN_RED1, 1);
+    delay(500);
+    
+    Serial.println("green\n");
+    digitalWrite(PIN_RED1, 0);
+    digitalWrite(PIN_GREEN1, 1);
+    delay(500);
+
+    Serial.println("blue\n");
+    digitalWrite(PIN_GREEN1, 0);
+    digitalWrite(PIN_BLUE1, 1);
+    delay(500);
+    digitalWrite(PIN_BLUE1, 0);
+}
+
+
 Settings settings;
 
 bool firstRun = true;
@@ -88,16 +114,22 @@ void setup() {
     pinMode(PIN_GREEN1, OUTPUT);
     pinMode(PIN_BLUE1, OUTPUT);
 
+#ifdef TWO_LED
     pinMode(PIN_RED2, OUTPUT);
     pinMode(PIN_GREEN2, OUTPUT);
     pinMode(PIN_BLUE2, OUTPUT);
-    
-    setBothLEDs(LED_BLUE);
+#endif
 
     //Start Serial
     Serial.begin(115200);
     Serial.println("########################");
     Serial.println("Serial started");
+
+    // confirm our build
+    ledTest();
+
+    // ok, we're good.
+    setBothLEDs(LED_BLUE);
 
     //save flash memory from being written too without need.
     WiFi.persistent(false);
@@ -257,16 +289,20 @@ void changeState(uint8_t stateToChangeTo) {
 
 void setBothLEDs(uint8_t color) {
     setLED(color, PIN_RED1, PIN_GREEN1, PIN_BLUE1);
+#ifdef TWO_LED
     setLED(color, PIN_RED2, PIN_GREEN2, PIN_BLUE2);
+#endif
 }
 
 void setLED1(uint8_t color) {
     setLED(color, PIN_RED1, PIN_GREEN1, PIN_BLUE1);
 }
 
+#ifdef TWO_LED
 void setLED2(uint8_t color) {
     setLED(color, PIN_RED2, PIN_GREEN2, PIN_BLUE2);
 }
+#endif
 
 void setLED(uint8_t color, int pinRed, int pinGreen, int pinBlue) {
     switch (color) {
